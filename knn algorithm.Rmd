@@ -1,0 +1,107 @@
+---
+title: "Machine learning"
+author: "Victor Mandela"
+date: "February 14, 2020"
+output: html_document
+---
+
+```{r Measuring similarities}
+# Load the 'class' package
+library(class)
+
+# Create a vector of labels
+sign_types <- signs[,1]
+
+# Classify the next sign observed
+knn(train = signs[-1], test = next_sign, cl = sign_types)
+
+# Examine the structure of the signs dataset
+str(signs)
+
+# Count the number of signs of each type
+table(signs$sign_type)
+
+# Check r10's average red level might vary by sign type
+aggregate(r10 ~ sign_type, data = signs, mean)
+
+# Use kNN to identify the test road signs
+sign_types <- signs$sign_type
+signs_pred <- knn(train = signs[-1], test = test_signs[-1], cl = sign_types)
+
+# Create a confusion matrix of the predicted versus actual values
+signs_actual <- test_signs[,1]
+table(signs_pred, signs_actual)
+
+# Compute the accuracy
+mean(signs_pred == signs_actual)
+
+# Compute the accuracy of the baseline model (default k = 1)
+k_1 <- knn(train = signs[,-1], test = signs_test[,-1], cl = sign_types)
+mean(k_1 == signs_actual)
+
+# Modify the above to set k = 7
+k_7 <- knn(train = signs[,-1], test = signs_test[,-1], cl = sign_types, k = 7)
+mean(k_7 == signs_actual)
+
+# Set k = 15 and compare to the above
+k_15 <- knn(train = signs[,-1], test = signs_test[,-1], cl = sign_types, k = 15)
+mean(k_15 == signs_actual)
+
+# Use the prob parameter to get the proportion of votes for the winning class
+sign_pred <- knn(signs[,-1], signs_test[,-1], sign_types, k = 7, prob = TRUE)
+
+# Get the "prob" attribute from the predicted classes
+sign_prob <- attr(sign_pred, "prob")
+
+# Examine the first several predictions
+head(sign_pred)
+
+# Examine the proportion of votes for the winning class
+head(sign_prob)
+```
+
+```{r Bayesian Methods, naive bayes}
+
+library(naivebayes)
+m <- naive_bayes(location ~ time_of_day, data = location_history)
+
+# making predictions with Naive Bayes
+future_location <- predict(m, future_conditions)
+
+# Compute P(A) 
+p_A <- 39/91
+
+# Compute P(B)
+p_B <- 65/91
+# Compute the observed P(A and B)
+p_AB <- 39/91
+
+# Compute P(A | B) and print its value
+p_A_given_B <- (39/91)/(65/91)
+p_A_given_B
+
+# Load the naivebayes package
+library(naivebayes)
+
+# Build the location prediction model
+locmodel <- naive_bayes(location ~daytype, data = where9am)
+
+# Predict Thursday's 9am location
+predict(locmodel,thursday9am)
+
+# Predict Saturdays's 9am location
+predict(locmodel,saturday9am)
+
+# The 'naivebayes' package is loaded into the workspace
+# and the Naive Bayes 'locmodel' has been built
+
+# Examine the location prediction model
+locmodel
+
+# Obtain the predicted probabilities for Thursday at 9am
+predict(locmodel, thursday9am , type = "prob")
+
+# Obtain the predicted probabilities for Saturday at 9am
+predict(locmodel, saturday9am, type = "prob")
+```
+
