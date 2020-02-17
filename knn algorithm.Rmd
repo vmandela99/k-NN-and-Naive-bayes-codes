@@ -103,5 +103,105 @@ predict(locmodel, thursday9am , type = "prob")
 
 # Obtain the predicted probabilities for Saturday at 9am
 predict(locmodel, saturday9am, type = "prob")
+
+# The 'naivebayes' package is loaded into the workspace already
+
+# Build a NB model of location
+locmodel <- naive_bayes(location ~ daytype + hourtype, data = locations)
+
+# Predict Brett's location on a weekday afternoon
+predict(locmodel,weekday_afternoon)
+
+# Predict Brett's location on a weekday evening
+predict(locmodel,weekday_evening)
+
+# The naive bayes algorithm got its name because it makes a "naive" assumption about event independence - the purpose of making this assumption is that the joint probabilities calculation is simpler for independent events.
+
+# Observe the predicted probabilities for a weekend afternoon
+predict(locmodel, weekday_afternoon, type = "prob")
+
+# Build a new model using the Laplace correction
+locmodel2 <- naive_bayes(location ~ daytype + hourtype, data = locations, laplace = 1)
+
+# Observe the new predicted probabilities for a weekend afternoon
+predict(locmodel2, weekday_afternoon, type = "prob")
+
+# In conclusio, numeric data is always binned before it is used in Naive bayes - This is similar to creating categories.!!
+
+```
+
+# logistic regression
+
+```{r logistic regression}
+m <- glm(y ~ x1 + x2 + x3, data = mydataset, family = "binomial")
+
+prob <-  predict(m , test_dataset, type = "response")
+
+pred <- ifelse(prob > 0.50, 1, 0)
+
+# Examine the dataset to identify potential independent variables
+str(donors)
+
+# Explore the dependent variable
+table(donors$donated)
+
+# Build the donation model
+donation_model <- glm(donated ~ bad_address + interest_religion + interest_veterans, data = donors, family = "binomial")
+
+# Summarize the model results
+summary(donation_model)
+
+# Estimate the donation probability
+donors$donation_prob <- predict(donation_model, type = "response")
+
+# Find the donation probability of the average prospect
+mean(donors$donated)
+
+# Predict a donation if probability of donation is greater than average (0.0504)
+donors$donation_pred <- ifelse(donors$donation_prob > 0.0504, 1, 0)
+
+# Calculate the model's accuracy
+mean(donors$donation_pred == donors$donated)
+
+# since accuracy is a very misleading measure of performance on imbalanced datasets, graphing the model performance better illustrates the trade off between a model that is aggressive and that is overly passive.
+
+# Load the pROC package
+library(pROC)
+
+# Create a ROC curve
+ROC <- roc(donors$donated, donors$donation_prob)
+
+# Plot the ROC curve
+plot(ROC, col = "blue")
+
+# Calculate the area under the curve (AUC)
+auc(ROC)
+# the AUC is 0.510
+# Based on this visualization, the model isn't doing much better than baseline- a model doing nothing but making predictions at random.
+```
+ 
+## Dummy variables, Missing data and Interactions
+
+```{r Preparing data for logistic regression}
+#Create gender factor
+mydata$gender <- factor(mydata$gender,
+                        levels = c(0, 1, 2),
+                        labels = c("Male", "Female", "Other"))
+# Convert the wealth rating to a factor
+donors$wealth_levels <- factor(donors$wealth_rating,
+                               levels = c(0,1,2,3),
+                               labels = c("Unknown", "Low", "Medium", "High"))
+
+# Use relevel() to change reference category
+donors$wealth_levels <- relevel(donors$wealth_levels,
+                                ref = "Medium")
+
+# See how our factor coding impacts the model
+
+model = glm(donated ~ wealth_levels,
+            data = donors,
+            family = "binomial")
+
+summary(model)
 ```
 
