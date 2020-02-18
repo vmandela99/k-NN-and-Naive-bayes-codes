@@ -50,3 +50,76 @@ loans_train <- loans[sample_rows, ]
 loans_test <- loans[-sample_rows, ]
 ```
 
+A more complex model for decision trees.
+
+Using all of the available applicant data, build a more sophisticated lending model using the random training dataset created previously. Then, use this model to make predictions on the testing dataset to estimate the performance of the model on future loan applications.
+
+**Holding out ** test data reduces the amount of data available for growing the decision tree. In spite of this, it is very important to evaluate decision trees on data it has not seen before.
+
+```{r Using all variables}
+# Grow a tree using all of the available applicant data
+loan_model <- rpart(outcome ~ ., data = loans_train, method = "class", control = rpart.control(cp = 0))
+
+# Make predictions on the test dataset
+loans_test$pred <- predict(loan_model, loans_test, type = "class")
+
+#Create a table() to compare the predicted values to the actual outcome values.
+# Examine the confusion matrix
+table(loans_test$pred, loans_test$outcome)
+
+# Compute the accuracy on the test dataset
+mean(loans_test$outcome == loans_test$pred)
+
+# Preventing overgrown trees
+loan_model <- rpart(outcome ~ ., data = loans_train, method = "class", control = rpart.control(cp = 0))
+
+# Grow a tree with maxdepth of 6
+loan_model <- rpart(outcome ~ ., data = loans_train, method = "class", control = rpart.control(cp = 0, maxdepth = 6) )
+
+# Make a class prediction on the test set
+loans_test$pred <- predict(loan_model, loans_test, type = "class")
+
+# Compute the accuracy of the simpler tree
+mean(loans_test$outcome == loans_test$pred)
+#mean(loans_test$pred == loans_test$outcome)
+
+# or
+
+# Swap maxdepth for a minimum split of 500 
+loan_model <- rpart(outcome ~ ., data = loans_train, method = "class", control = rpart.control(cp = 0, minsplit = 500))
+
+# Run this. How does the accuracy change?
+loans_test$pred <- predict(loan_model, loans_test, type = "class")
+mean(loans_test$pred == loans_test$outcome)
+
+# Grow an overly complex tree
+loan_model <- rpart(outcome ~. , data = loans_train, method = "class", control = rpart.control(cp = 0))
+
+# Examine the complexity plot
+plotcp(loan_model)
+
+# Prune the tree
+loan_model_pruned <- prune(loan_model, cp = 0.0014)
+
+# Compute the accuracy of the pruned tree
+loans_test$pred <- predict(loan_model_pruned, loans_test, type = "class")
+
+mean(loans_test$outcome ==  loans_test$pred)
+
+# Understanding random forest
+# Groups of classification trees can be combined into an ensemble that generates a single prediction by allowing the trees to "vote" on the outcome
+# this could result in more accurate predictions than a single tree because the diversity among the trees may lead it to discover more subtle patterns. The teamwork-based approach of the random forest may help it find important trends a single tree may miss
+
+##random forest in its realest form
+# Load the randomForest package
+library(randomForest)
+
+# Build a random forest model
+loan_model <- randomForest(outcome ~ ., data = loans_train)
+
+# Compute the accuracy of the random forest
+loans_test$pred <- predict(loan_model, loans_test)
+mean(loans_test$outcome == loans_test$pred)
+
+```
+
